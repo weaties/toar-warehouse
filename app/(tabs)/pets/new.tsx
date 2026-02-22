@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { router, useNavigation } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,10 +21,16 @@ export default function NewPetScreen() {
   const [initialValues, setInitialValues] = useState<Partial<PetFormValues> | undefined>(undefined);
 
   async function handleScanForm() {
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.9,
-    });
+    // On web use the image library (file picker); on native use the camera
+    const result = await (Platform.OS === 'web'
+      ? ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          quality: 0.9,
+        })
+      : ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          quality: 0.9,
+        }));
 
     if (result.canceled) return;
 
@@ -32,9 +38,26 @@ export default function NewPetScreen() {
     setIsScanning(true);
 
     try {
-      const base64 = await FileSystem.readAsStringAsync(imageUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      let base64: string;
+      if (Platform.OS === 'web') {
+        // On web, the URI is a data URL (data:image/...;base64,...) or blob URL
+        if (imageUri.startsWith('data:')) {
+          base64 = imageUri.split(',')[1];
+        } else {
+          const resp = await fetch(imageUri);
+          const blob = await resp.blob();
+          base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve((reader.result as string).split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        }
+      } else {
+        base64 = await FileSystem.readAsStringAsync(imageUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      }
 
       const { data, error } = await supabase.functions.invoke('scan-form', {
         body: { image_base64: base64 },
