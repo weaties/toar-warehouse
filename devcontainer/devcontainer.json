@@ -1,0 +1,57 @@
+{
+  "name": "TOAR Warehouse",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    }
+  },
+
+  "forwardPorts": [
+    8081,   // Expo web
+    19000,  // Expo dev tools
+    19001,  // Expo tunnel
+    19002,  // Expo debugger
+    54321,  // Supabase local studio
+    54322   // Supabase local API
+  ],
+
+  "portsAttributes": {
+    "8081":  { "label": "Expo Web",       "onAutoForward": "openBrowser" },
+    "19000": { "label": "Expo Dev Tools",  "onAutoForward": "notify" },
+    "54321": { "label": "Supabase Studio", "onAutoForward": "notify" },
+    "54322": { "label": "Supabase API",    "onAutoForward": "silent" }
+  },
+
+  "onCreateCommand": "bash .devcontainer/bootstrap.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-typescript-next",
+        "github.copilot",
+        "supabase.vscode-supabase-extension",
+        "expo.vscode-expo-tools",
+        "mikestead.dotenv",
+        "aaron-bond.better-comments",
+        "streetsidesoftware.code-spell-checker"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+      }
+    }
+  },
+
+  "remoteEnv": {
+    "EXPO_DEVTOOLS_LISTEN_ADDRESS": "0.0.0.0"
+  }
+}
