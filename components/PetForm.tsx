@@ -2,7 +2,7 @@
  * Shared form component used by both new intake and edit pet screens.
  * Highlights pre-filled fields from AI scan with a light blue background.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -28,6 +28,7 @@ import { Controller, useForm, useFieldArray, type Control } from 'react-hook-for
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { searchOwners } from '@/lib/supabase/owners';
+import { saveDraft, loadDraft, clearDraft } from '@/lib/drafts';
 import type { Owner, PetFormData, VaccinationFormData, ScannedFormData } from '@/types';
 
 const vaxxSchema = z.object({
@@ -87,6 +88,8 @@ interface Props {
   onScanForm?: () => void;
   isScanning?: boolean;
   submitLabel?: string;
+  /** AsyncStorage key for draft auto-save. When provided, the form persists in-progress data. */
+  draftKey?: string;
 }
 
 export default function PetForm({
@@ -96,6 +99,7 @@ export default function PetForm({
   onScanForm,
   isScanning,
   submitLabel = 'Save',
+  draftKey,
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [ownerSearch, setOwnerSearch] = useState('');
@@ -104,6 +108,7 @@ export default function PetForm({
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [reviewedSections, setReviewedSections] = useState<Set<string>>(new Set());
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasScannedData = scannedFields && scannedFields.size > 0;
   const requiredSections = hasScannedData
@@ -118,11 +123,47 @@ export default function PetForm({
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<PetFormValues>({
     resolver: zodResolver(petSchema),
     defaultValues: { ...DEFAULT_VALUES, ...initialValues },
   });
+
+  // Draft auto-save: restore on mount, save on change
+  useEffect(() => {
+    if (!draftKey) return;
+    loadDraft<PetFormValues>(draftKey).then((draft) => {
+      if (!draft) return;
+      Alert.alert(
+        'Restore draft?',
+        'You have an unsaved draft for this form. Would you like to restore it?',
+        [
+          { text: 'Discard', style: 'destructive', onPress: () => clearDraft(draftKey) },
+          {
+            text: 'Restore',
+            onPress: () => {
+              reset({ ...DEFAULT_VALUES, ...draft });
+            },
+          },
+        ],
+      );
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey]);
+
+  // Watch all fields and debounce-save to AsyncStorage
+  const allValues = watch();
+  useEffect(() => {
+    if (!draftKey) return;
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = setTimeout(() => {
+      saveDraft(draftKey, allValues);
+    }, 1500);
+    return () => {
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    };
+  }, [draftKey, allValues]);
 
   const { fields: vaxxFields, append: appendVaxx, remove: removeVaxx } =
     useFieldArray({ control, name: 'vaccinations' });
@@ -134,6 +175,7 @@ export default function PetForm({
     setSubmitting(true);
     try {
       await onSubmit(data);
+      if (draftKey) await clearDraft(draftKey);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Save failed.';
       Alert.alert('Error', message);

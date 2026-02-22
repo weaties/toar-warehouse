@@ -94,6 +94,7 @@ export default function EditPetScreen() {
       initialValues={initialValues}
       onSubmit={handleSubmit}
       submitLabel="Save Changes"
+      draftKey={`pet_edit_${id}`}
     />
   );
 }

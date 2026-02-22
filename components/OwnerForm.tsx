@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
   Alert,
 } from 'react-native';
+import { saveDraft, loadDraft, clearDraft } from '@/lib/drafts';
 import {
   Text,
   TextInput,
@@ -49,20 +50,54 @@ interface Props {
   initialValues?: Partial<OwnerFormValues>;
   onSubmit: (data: OwnerFormValues) => Promise<void>;
   submitLabel?: string;
+  /** AsyncStorage key for draft auto-save. When provided, the form persists in-progress data. */
+  draftKey?: string;
 }
 
-export default function OwnerForm({ initialValues, onSubmit, submitLabel = 'Save' }: Props) {
+export default function OwnerForm({ initialValues, onSubmit, submitLabel = 'Save', draftKey }: Props) {
   const [submitting, setSubmitting] = useState(false);
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<OwnerFormValues>({
+  const { control, handleSubmit, watch, reset, formState: { errors } } = useForm<OwnerFormValues>({
     resolver: zodResolver(ownerSchema),
     defaultValues: { ...DEFAULT_VALUES, ...initialValues },
   });
+
+  // Draft auto-save: restore on mount
+  useEffect(() => {
+    if (!draftKey) return;
+    loadDraft<OwnerFormValues>(draftKey).then((draft) => {
+      if (!draft) return;
+      Alert.alert(
+        'Restore draft?',
+        'You have an unsaved draft for this form. Would you like to restore it?',
+        [
+          { text: 'Discard', style: 'destructive', onPress: () => clearDraft(draftKey) },
+          { text: 'Restore', onPress: () => reset({ ...DEFAULT_VALUES, ...draft }) },
+        ],
+      );
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey]);
+
+  // Watch all fields and debounce-save to AsyncStorage
+  const allValues = watch();
+  useEffect(() => {
+    if (!draftKey) return;
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = setTimeout(() => {
+      saveDraft(draftKey, allValues);
+    }, 1500);
+    return () => {
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    };
+  }, [draftKey, allValues]);
 
   const doSubmit = handleSubmit(async (data) => {
     setSubmitting(true);
     try {
       await onSubmit(data);
+      if (draftKey) await clearDraft(draftKey);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Save failed.';
       Alert.alert('Error', message);

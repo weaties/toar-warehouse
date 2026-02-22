@@ -10,5 +10,5 @@ export default function NewOwnerScreen() {
     router.replace(`/(tabs)/owners/${owner.id}`);
   }
 
-  return <OwnerForm onSubmit={handleSubmit} submitLabel="Add Person" />;
+  return <OwnerForm onSubmit={handleSubmit} submitLabel="Add Person" draftKey="owner_new" />;
 }

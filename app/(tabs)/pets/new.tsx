@@ -144,6 +144,7 @@ export default function NewPetScreen() {
       onScanForm={handleScanForm}
       isScanning={isScanning}
       submitLabel="Save Record"
+      draftKey="pet_new"
     />
   );
 }

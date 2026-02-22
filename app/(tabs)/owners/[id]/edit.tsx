@@ -54,6 +54,7 @@ export default function EditOwnerScreen() {
       initialValues={initialValues}
       onSubmit={handleSubmit}
       submitLabel="Save Changes"
+      draftKey={`owner_edit_${id}`}
     />
   );
 }
