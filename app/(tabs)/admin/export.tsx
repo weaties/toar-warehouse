@@ -1,35 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text, Button, Card, Snackbar } from 'react-native-paper';
+import { Text, Button, Card, Snackbar, Divider } from 'react-native-paper';
 import { exportContactsCsv, exportPetsCsv } from '@/lib/export';
+import { pushToSheets, getSavedSheetId } from '@/lib/sheets';
+
+type ExportAction = 'csv-contacts' | 'csv-pets' | 'sheets-contacts' | 'sheets-pets' | null;
 
 export default function ExportScreen() {
-  const [exporting, setExporting] = useState<'contacts' | 'pets' | null>(null);
+  const [active, setActive] = useState<ExportAction>(null);
   const [snack, setSnack] = useState('');
+  const [sheetId, setSheetId] = useState('');
 
-  async function doExport(type: 'contacts' | 'pets') {
-    setExporting(type);
+  useEffect(() => {
+    getSavedSheetId().then(setSheetId);
+  }, []);
+
+  async function doExport(action: ExportAction) {
+    setActive(action);
     try {
-      if (type === 'contacts') {
+      if (action === 'csv-contacts') {
         await exportContactsCsv();
-      } else {
+        setSnack('Contacts exported.');
+      } else if (action === 'csv-pets') {
         await exportPetsCsv();
+        setSnack('Pets exported.');
+      } else if (action === 'sheets-contacts') {
+        const { rows } = await pushToSheets('contacts', sheetId);
+        setSnack(`Pushed ${rows} contact${rows !== 1 ? 's' : ''} to Google Sheets.`);
+      } else if (action === 'sheets-pets') {
+        const { rows } = await pushToSheets('pets', sheetId);
+        setSnack(`Pushed ${rows} pet${rows !== 1 ? 's' : ''} to Google Sheets.`);
       }
-      setSnack('Export complete!');
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Export failed.';
       setSnack(message);
     } finally {
-      setExporting(null);
+      setActive(null);
     }
   }
+
+  const sheetsConfigured = !!sheetId.trim();
 
   return (
     <View style={styles.container}>
       <Text variant="bodyMedium" style={styles.intro}>
-        Export data as CSV files to share or import into spreadsheet software.
+        Export data as CSV files or push to Google Sheets.
       </Text>
 
+      {/* Contacts */}
       <Card style={styles.card}>
         <Card.Title
           title="Contacts List"
@@ -40,19 +58,31 @@ export default function ExportScreen() {
             </View>
           )}
         />
-        <Card.Actions>
+        <Card.Actions style={styles.cardActions}>
+          <Button
+            mode="outlined"
+            onPress={() => doExport('csv-contacts')}
+            loading={active === 'csv-contacts'}
+            disabled={!!active}
+            icon="download"
+            compact
+          >
+            CSV
+          </Button>
           <Button
             mode="contained"
-            onPress={() => doExport('contacts')}
-            loading={exporting === 'contacts'}
-            disabled={!!exporting}
-            icon="download"
+            onPress={() => doExport('sheets-contacts')}
+            loading={active === 'sheets-contacts'}
+            disabled={!!active || !sheetsConfigured}
+            icon="google-spreadsheet"
+            compact
           >
-            Export Contacts
+            Push to Sheets
           </Button>
         </Card.Actions>
       </Card>
 
+      {/* Pets */}
       <Card style={styles.card}>
         <Card.Title
           title="Pets List"
@@ -63,23 +93,40 @@ export default function ExportScreen() {
             </View>
           )}
         />
-        <Card.Actions>
+        <Card.Actions style={styles.cardActions}>
+          <Button
+            mode="outlined"
+            onPress={() => doExport('csv-pets')}
+            loading={active === 'csv-pets'}
+            disabled={!!active}
+            icon="download"
+            compact
+          >
+            CSV
+          </Button>
           <Button
             mode="contained"
-            onPress={() => doExport('pets')}
-            loading={exporting === 'pets'}
-            disabled={!!exporting}
-            icon="download"
+            onPress={() => doExport('sheets-pets')}
+            loading={active === 'sheets-pets'}
+            disabled={!!active || !sheetsConfigured}
+            icon="google-spreadsheet"
+            compact
           >
-            Export Pets
+            Push to Sheets
           </Button>
         </Card.Actions>
       </Card>
 
+      {!sheetsConfigured && (
+        <Text style={styles.sheetsHint}>
+          Set a Google Sheet ID in Settings to enable Sheets push.
+        </Text>
+      )}
+
       <Snackbar
         visible={!!snack}
         onDismiss={() => setSnack('')}
-        duration={3000}
+        duration={4000}
       >
         {snack}
       </Snackbar>
@@ -95,6 +142,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   card: { marginBottom: 16, backgroundColor: '#fff' },
+  cardActions: { gap: 8, flexWrap: 'wrap' },
   iconWrapper: {
     width: 40,
     height: 40,
@@ -102,4 +150,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   icon: { fontSize: 24 },
+  sheetsHint: {
+    textAlign: 'center',
+    color: '#999',
+    fontSize: 12,
+    marginTop: 4,
+  },
 });

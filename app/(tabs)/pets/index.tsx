@@ -4,28 +4,38 @@ import {
   FlatList,
   StyleSheet,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 import {
   Searchbar,
   FAB,
-  SegmentedButtons,
   Text,
   ActivityIndicator,
+  Chip,
   Menu,
   Button,
 } from 'react-native-paper';
 import { router, useFocusEffect } from 'expo-router';
 import { fetchPets } from '@/lib/supabase/pets';
 import PetCard from '@/components/PetCard';
-import type { Pet, PetStatus, Species } from '@/types';
+import type { Pet, Species } from '@/types';
 
-const STATUS_OPTIONS: { value: string; label: string }[] = [
+const STATUS_FILTERS: { value: string; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'intake', label: 'Intake' },
-  { value: 'vet_check', label: 'Vet' },
+  { value: 'vet_check', label: 'Vet Check' },
   { value: 'available', label: 'Available' },
   { value: 'foster', label: 'Foster' },
   { value: 'adopted', label: 'Adopted' },
+  { value: 'deceased', label: 'Deceased' },
+];
+
+const INTAKE_FILTERS: { value: string; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'surrender', label: 'Surrender' },
+  { value: 'stray', label: 'Stray' },
+  { value: 'found', label: 'Found' },
+  { value: 'transfer', label: 'Transfer' },
 ];
 
 export default function PetsListScreen() {
@@ -34,6 +44,7 @@ export default function PetsListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [intakeFilter, setIntakeFilter] = useState('all');
   const [speciesMenuVisible, setSpeciesMenuVisible] = useState(false);
   const [speciesFilter, setSpeciesFilter] = useState<Species | 'all'>('all');
 
@@ -63,7 +74,9 @@ export default function PetsListScreen() {
       statusFilter === 'all' || p.current_status === statusFilter;
     const matchSpecies =
       speciesFilter === 'all' || p.species === speciesFilter;
-    return matchSearch && matchStatus && matchSpecies;
+    const matchIntake =
+      intakeFilter === 'all' || p.intake_type === intakeFilter;
+    return matchSearch && matchStatus && matchSpecies && matchIntake;
   });
 
   return (
@@ -98,13 +111,42 @@ export default function PetsListScreen() {
         </Menu>
       </View>
 
-      <SegmentedButtons
-        value={statusFilter}
-        onValueChange={setStatusFilter}
-        buttons={STATUS_OPTIONS}
-        style={styles.segmented}
-        density="small"
-      />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+      >
+        {STATUS_FILTERS.map((f) => (
+          <Chip
+            key={f.value}
+            selected={statusFilter === f.value}
+            onPress={() => setStatusFilter(f.value)}
+            compact
+            style={styles.chip}
+          >
+            {f.label}
+          </Chip>
+        ))}
+      </ScrollView>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+      >
+        <Text style={styles.chipRowLabel}>Intake:</Text>
+        {INTAKE_FILTERS.map((f) => (
+          <Chip
+            key={f.value}
+            selected={intakeFilter === f.value}
+            onPress={() => setIntakeFilter(f.value)}
+            compact
+            style={styles.chip}
+          >
+            {f.label}
+          </Chip>
+        ))}
+      </ScrollView>
 
       {loading ? (
         <ActivityIndicator style={styles.loader} size="large" color="#2d6a4f" />
@@ -159,10 +201,20 @@ const styles = StyleSheet.create({
   speciesBtn: {
     borderColor: '#ced4da',
   },
-  segmented: {
-    marginHorizontal: 16,
-    marginVertical: 8,
+  chipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    gap: 8,
+    backgroundColor: '#fff',
   },
+  chipRowLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginRight: 4,
+  },
+  chip: {},
   list: {
     paddingBottom: 100,
     paddingTop: 4,
