@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "OAR Rescue",
+    "slug": "toar-warehouse",
+    "version": "0.1.0",
+    "scheme": "oar-rescue",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2d6a4f"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.oar.rescue",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to photograph animals and scan paper intake forms.",
+        "NSPhotoLibraryUsageDescription": "Used to attach photos to animal records.",
+        "NSPhotoLibraryAddUsageDescription": "Used to save photos to your library."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#2d6a4f"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
+      "package": "com.oar.rescue"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "OAR Rescue accesses your photos to attach them to animal records.",
+          "cameraPermission": "OAR Rescue uses your camera to photograph animals and scan intake forms."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "OAR Rescue uses your camera to photograph animals and scan intake forms."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
