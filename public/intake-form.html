@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OAR Rescue — Animal Intake Form</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      color: #111;
+      background: #fff;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 3px solid #2d6a4f;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .header-logo {
+      font-size: 40px;
+      line-height: 1;
+    }
+    .header-text h1 {
+      font-size: 18pt;
+      color: #2d6a4f;
+      letter-spacing: 0.5px;
+    }
+    .header-text p {
+      font-size: 9pt;
+      color: #555;
+      margin-top: 2px;
+    }
+
+    .meta-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    /* ── Sections ── */
+    .section {
+      border: 1.5px solid #aaa;
+      border-radius: 4px;
+      margin-bottom: 14px;
+      break-inside: avoid;
+    }
+    .section-title {
+      background: #2d6a4f;
+      color: #fff;
+      font-size: 10pt;
+      font-weight: bold;
+      padding: 4px 10px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+    .section-title.light {
+      background: #d8f3dc;
+      color: #1b4332;
+    }
+    .section-body {
+      padding: 10px 12px;
+    }
+    .section-note {
+      font-size: 8.5pt;
+      color: #777;
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+
+    /* ── Field rows ── */
+    .field-row {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .field-row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .field-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .field-row.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .field-row.cols-1-2 { grid-template-columns: 1fr 2fr; }
+    .field-row.cols-2-1 { grid-template-columns: 2fr 1fr; }
+
+    .field label {
+      display: block;
+      font-size: 8pt;
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .field .line {
+      border-bottom: 1.5px solid #333;
+      height: 22px;
+      width: 100%;
+    }
+    .field .line.tall {
+      height: 50px;
+      border: 1.5px solid #333;
+      border-radius: 2px;
+    }
+    .field .line.taller {
+      height: 72px;
+      border: 1.5px solid #333;
+      border-radius: 2px;
+    }
+
+    /* ── Checkbox groups ── */
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10pt;
+      font-weight: normal;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #111;
+      cursor: pointer;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: #2d6a4f;
+    }
+
+    /* ── Vaccination table ── */
+    .vaxx-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10pt;
+    }
+    .vaxx-table th {
+      background: #f0f0f0;
+      text-align: left;
+      padding: 4px 8px;
+      font-size: 8.5pt;
+      border: 1px solid #ccc;
+      font-weight: bold;
+    }
+    .vaxx-table td {
+      border: 1px solid #ccc;
+      padding: 2px 6px;
+      height: 26px;
+    }
+    .vaxx-table td.type-col {
+      font-weight: bold;
+      font-size: 9pt;
+      background: #fafafa;
+      width: 120px;
+    }
+
+    /* ── Office use section ── */
+    .office-section {
+      border: 2px dashed #aaa;
+      border-radius: 4px;
+      margin-bottom: 14px;
+      break-inside: avoid;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      font-size: 8pt;
+      color: #888;
+      text-align: center;
+      border-top: 1px solid #ddd;
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+
+    /* ── Print button (screen only) ── */
+    .print-btn {
+      display: block;
+      margin: 0 auto 20px;
+      padding: 10px 32px;
+      background: #2d6a4f;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 12pt;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+    .print-btn:hover { background: #1b4332; }
+
+    /* ── Required marker ── */
+    .req { color: #c00; }
+
+    @media print {
+      body { padding: 0; font-size: 10pt; }
+      .print-btn { display: none; }
+      @page { margin: 15mm 15mm 15mm 15mm; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="print-btn" onclick="window.print()">🖨️ Print Form</button>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo">🐾</div>
+    <div class="header-text">
+      <h1>Okanagan Animal Rescue</h1>
+      <p>Animal Intake Form — please complete as much as you are comfortable providing</p>
+    </div>
+  </div>
+
+  <!-- Meta -->
+  <div class="meta-row">
+    <div class="field">
+      <label>Date</label>
+      <div class="line"></div>
+    </div>
+    <div class="field">
+      <label>Intake # (office use)</label>
+      <div class="line"></div>
+    </div>
+    <div class="field">
+      <label>Volunteer initials</label>
+      <div class="line"></div>
+    </div>
+  </div>
+
+  <!-- ── OWNER INFORMATION ── -->
+  <div class="section">
+    <div class="section-title">Owner / Contact Information</div>
+    <div class="section-body">
+      <p class="section-note">All fields optional — share only what you're comfortable with. A pet can be surrendered with no contact info.</p>
+
+      <div class="field-row cols-2">
+        <div class="field"><label>Full Name</label><div class="line"></div></div>
+        <div class="field"><label>Primary Phone</label><div class="line"></div></div>
+      </div>
+
+      <div class="field-row cols-2">
+        <div class="field"><label>Email Address</label><div class="line"></div></div>
+        <div class="field"><label>Secondary / Alternate Phone</label><div class="line"></div></div>
+      </div>
+
+      <div class="field-row cols-1-2">
+        <div class="field"><label>Street Address</label><div class="line"></div></div>
+        <div class="field"><label>City</label><div class="line"></div></div>
+      </div>
+
+      <div class="field-row cols-3">
+        <div class="field"><label>Province</label><div class="line"></div></div>
+        <div class="field"><label>Postal Code</label><div class="line"></div></div>
+        <div class="field"></div>
+      </div>
+
+      <div class="field" style="margin-bottom:8px">
+        <label>Contact Type (check all that apply)</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" /> Adopter</label>
+          <label><input type="checkbox" /> Foster</label>
+          <label><input type="checkbox" /> Donor</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Notes (e.g. best time to call, preferred contact method)</label>
+        <div class="line tall"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PET INFORMATION ── -->
+  <div class="section">
+    <div class="section-title">Pet Information</div>
+    <div class="section-body">
+
+      <div class="field-row cols-2">
+        <div class="field">
+          <label>Pet Name <span class="req">*</span></label>
+          <div class="line"></div>
+        </div>
+        <div class="field">
+          <label>Breed</label>
+          <div class="line"></div>
+        </div>
+      </div>
+
+      <div class="field-row cols-3" style="margin-bottom:10px">
+        <div class="field">
+          <label>Species <span class="req">*</span></label>
+          <div class="checkbox-group" style="margin-top:6px">
+            <label><input type="checkbox" /> Dog</label>
+            <label><input type="checkbox" /> Cat</label>
+            <label><input type="checkbox" /> Other: <span style="display:inline-block;border-bottom:1px solid #333;width:60px">&nbsp;</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Sex</label>
+          <div class="checkbox-group" style="margin-top:6px">
+            <label><input type="checkbox" /> Male</label>
+            <label><input type="checkbox" /> Female</label>
+            <label><input type="checkbox" /> Unknown</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Spayed / Neutered</label>
+          <div class="checkbox-group" style="margin-top:6px">
+            <label><input type="checkbox" /> Yes</label>
+            <label><input type="checkbox" /> No</label>
+            <label><input type="checkbox" /> Unknown</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-row cols-4">
+        <div class="field"><label>Age — Years</label><div class="line"></div></div>
+        <div class="field"><label>Age — Months</label><div class="line"></div></div>
+        <div class="field"><label>Weight (lbs)</label><div class="line"></div></div>
+        <div class="field"><label>Microchip #</label><div class="line"></div></div>
+      </div>
+
+      <div class="field-row cols-2-1">
+        <div class="field"><label>Colour / Markings</label><div class="line"></div></div>
+        <div class="field">
+          <label>Intake Type</label>
+          <div class="checkbox-group" style="margin-top:6px">
+            <label><input type="checkbox" /> Surrender</label>
+            <label><input type="checkbox" /> Stray</label>
+            <label><input type="checkbox" /> Found</label>
+            <label><input type="checkbox" /> Transfer</label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── VACCINATIONS ── -->
+  <div class="section">
+    <div class="section-title light">Vaccination History (if known)</div>
+    <div class="section-body">
+      <table class="vaxx-table">
+        <thead>
+          <tr>
+            <th>Vaccine</th>
+            <th>Date Given</th>
+            <th>Clinic / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="type-col">Rabies</td><td></td><td></td></tr>
+          <tr><td class="type-col">Distemper (DHPP)</td><td></td><td></td></tr>
+          <tr><td class="type-col">Bordetella</td><td></td><td></td></tr>
+          <tr><td class="type-col">Other</td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── NOTES ── -->
+  <div class="section">
+    <div class="section-title light">Medical &amp; Behavioural Notes</div>
+    <div class="section-body">
+      <div class="field" style="margin-bottom:10px">
+        <label>Medical Notes (injuries, illnesses, medications, vet history)</label>
+        <div class="line taller"></div>
+      </div>
+      <div class="field">
+        <label>Behavioural Notes (temperament, fears, good with kids/dogs/cats)</label>
+        <div class="line taller"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OFFICE USE ── -->
+  <div class="office-section">
+    <div class="section-title">For Volunteer / Office Use Only</div>
+    <div class="section-body">
+      <div class="field-row cols-3">
+        <div class="field"><label>Initial Status</label>
+          <div class="checkbox-group" style="margin-top:6px">
+            <label><input type="checkbox" /> Intake</label>
+            <label><input type="checkbox" /> Vet Check</label>
+            <label><input type="checkbox" /> Foster</label>
+          </div>
+        </div>
+        <div class="field"><label>Record entered in OAR Rescue app</label>
+          <div class="checkbox-group" style="margin-top:6px">
+            <label><input type="checkbox" /> Yes — by: <span style="display:inline-block;border-bottom:1px solid #333;width:60px">&nbsp;</span></label>
+          </div>
+        </div>
+        <div class="field"><label>Paper form scanned / filed</label>
+          <div class="checkbox-group" style="margin-top:6px">
+            <label><input type="checkbox" /> Yes</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Okanagan Animal Rescue &bull; Information collected for rescue coordination purposes only &bull; oar-rescue.ca
+  </div>
+
+  <button class="print-btn" onclick="window.print()" style="margin-top:16px">🖨️ Print Form</button>
+
+</body>
+</html>
