@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { format } from 'date-fns';
@@ -77,8 +78,21 @@ export async function exportPetsCsv(): Promise<void> {
 
 async function writeCsvAndShare(csv: string, basename: string): Promise<void> {
   const filename = `${basename}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-  const fileUri = `${FileSystem.documentDirectory}${filename}`;
 
+  if (Platform.OS === 'web') {
+    // Browser download via a temporary anchor element
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    return;
+  }
+
+  // Native: write to device storage then share
+  const fileUri = `${FileSystem.documentDirectory}${filename}`;
   await FileSystem.writeAsStringAsync(fileUri, csv, {
     encoding: FileSystem.EncodingType.UTF8,
   });
